@@ -8,6 +8,10 @@ django = "*"
 mssql-django = "*"
 python-dotenv = "*"
 djangorestframework = "*"
+django-cors-headers = "*"
+pillow = "*"
+django-money = "*"
+pyjwt = "*"
 
 [dev-packages]
 
