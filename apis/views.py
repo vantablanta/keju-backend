@@ -1,3 +1,4 @@
+from itertools import product
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import status
@@ -6,11 +7,13 @@ from rest_framework.exceptions import APIException
 from django.views.decorators.csrf import csrf_exempt
 import jwt, datetime
 import os
-from apis.models import Products, Users
+from apis.models import Products, Users, Cart
 from apis.serializers import ProductsModelSerializer, UsersModelSerializer
 from pathlib import Path
 from django.http import JsonResponse
-
+from django.core.exceptions import ObjectDoesNotExist
+from .emails import signup_email
+from django.shortcuts import get_object_or_404
 
 
 from dotenv import load_dotenv
@@ -24,9 +27,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 @api_view(['GET'])
 def endpoints(request):
     api_urls = {
-        "Register": "/register",
+        "Signup": "/signup",
         "Login": "/login",
-        "Products": '/products'
+        "Products": '/products',
+        "Add": "/add",
+        "Cart":"/cart/<str: pk>"
     }
     return Response(api_urls)
 
@@ -64,12 +69,17 @@ def login_user(request):
 @csrf_exempt
 @api_view(['POST', 'GET'])
 def signup(request):
-    user_serailizer = UsersModelSerializer(data = request.data)
-    if user_serailizer.is_valid():
-        user_serailizer.save()
-        return Response(user_serailizer.data)
+    user_serializer = UsersModelSerializer(data = request.data)
+    if user_serializer.is_valid():
+        user_serializer.save()
+
+        email = user_serializer.data['email']
+        username = user_serializer.data['username']
+        signup_email(username,email)
+            
+        return Response(user_serializer.data)
     else:
-        return Response(user_serailizer.errors, status=status.HTTP_403_FORBIDDEN)
+        return Response(user_serializer.errors, status=status.HTTP_403_FORBIDDEN)
 
 
 @csrf_exempt
@@ -110,3 +120,17 @@ def add(request):
         return Response(products_serializer.data)
     else:
         return Response(products_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@csrf_exempt
+@api_view(['POST'])
+def add_to_cart(request, pk):
+    if request.user.is_authenticated:
+        try:
+            item = get_object_or_404(Products, pk)
+            cart = Cart.objects.create(buyer = request.user, product=item)
+            cart.save()
+        except ObjectDoesNotExist:
+            pass
+    else:
+        return Response("You need to be logged in ")

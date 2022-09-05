@@ -1,4 +1,5 @@
 from pyexpat import model
+from tkinter import CASCADE
 from django.db import models
 from djmoney.models.fields import MoneyField
 from django.contrib.auth.models import AbstractUser
@@ -26,3 +27,11 @@ class Products(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Cart(models.Model):
+    product = models.ForeignKey(Products, on_delete=models.CASCADE)
+    buyer = models.ForeignKey(Users, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.product.title
