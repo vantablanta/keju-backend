@@ -12,6 +12,8 @@ django-cors-headers = "*"
 pillow = "*"
 django-money = "*"
 pyjwt = "*"
+autopep8 = "*"
+djangorestframework-simplejwt = "*"
 
 [dev-packages]
 

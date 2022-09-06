@@ -1,5 +1,5 @@
 from rest_framework import serializers 
-from .models import Products, Users
+from .models import Categories, ProductDeals, Products, Users
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 User = get_user_model()
@@ -33,3 +33,15 @@ class UsersModelSerializer(serializers.ModelSerializer):
         user.set_password(password)
         user.save()
         return user
+
+
+
+class CategoriesModelSerializer(serializers.ModelSerializer):
+    class Meta: 
+        model = Categories
+        fields = '__all__'
+class ProductDealsModelSerializer(serializers.ModelSerializer):
+    class Meta: 
+        model = ProductDeals
+        fields = '__all__'
+

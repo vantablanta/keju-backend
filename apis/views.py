@@ -1,5 +1,3 @@
-from itertools import product
-from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -7,13 +5,11 @@ from rest_framework.exceptions import APIException
 from django.views.decorators.csrf import csrf_exempt
 import jwt, datetime
 import os
-from apis.models import Products, Users, Cart
-from apis.serializers import ProductsModelSerializer, UsersModelSerializer
+from apis.models import Categories, ProductDeals, Products, Users
+from apis.serializers import CategoriesModelSerializer, ProductDealsModelSerializer, ProductsModelSerializer, UsersModelSerializer
 from pathlib import Path
-from django.http import JsonResponse
-from django.core.exceptions import ObjectDoesNotExist
-from .emails import signup_email
-from django.shortcuts import get_object_or_404
+
+
 
 
 from dotenv import load_dotenv
@@ -29,15 +25,16 @@ def endpoints(request):
     api_urls = {
         "Signup": "/signup",
         "Login": "/login",
-        "Products": '/products',
+        "Categories": '/categories',
         "Add": "/add",
+        "Deals" : '/deals',
         "Cart":"/cart/<str: pk>"
     }
     return Response(api_urls)
 
 
 @csrf_exempt
-@api_view(['GET', 'POST'])
+@api_view(['POST'])
 def login_user(request):
     email = request.data['email']
     password = request.data['password']
@@ -59,7 +56,7 @@ def login_user(request):
     token = jwt.encode(payload, os.getenv('jwt_secret'), algorithm='HS256')
 
     response = Response()
-    response.set_cookie(key='jwt', value=token, httponly=True)
+    response.set_cookie(key='token', value=token, httponly=True)
     response.data = {
             'token':token
     }
@@ -67,15 +64,25 @@ def login_user(request):
 
 
 @csrf_exempt
-@api_view(['POST', 'GET'])
+@api_view(['GET', 'POST'])
+def logout_user(request):
+    response = Response()
+    response.delete_cookie('token')
+    response.data = {
+        'message': 'Logout Successful'
+        }
+    return response
+
+@csrf_exempt
+@api_view(['POST'])
 def signup(request):
     user_serializer = UsersModelSerializer(data = request.data)
     if user_serializer.is_valid():
         user_serializer.save()
 
-        email = user_serializer.data['email']
-        username = user_serializer.data['username']
-        signup_email(username,email)
+        # email = user_serializer.data['email']
+        # username = user_serializer.data['username']
+        # signup_email(username,email)
             
         return Response(user_serializer.data)
     else:
@@ -107,7 +114,6 @@ def get_user(request):
 def products(request):
     products = Products.objects.all()
     product_serializer = ProductsModelSerializer(products, many=True)
-
     return Response(product_serializer.data)
 
 
@@ -122,15 +128,14 @@ def add(request):
         return Response(products_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@csrf_exempt
-@api_view(['POST'])
-def add_to_cart(request, pk):
-    if request.user.is_authenticated:
-        try:
-            item = get_object_or_404(Products, pk)
-            cart = Cart.objects.create(buyer = request.user, product=item)
-            cart.save()
-        except ObjectDoesNotExist:
-            pass
-    else:
-        return Response("You need to be logged in ")
+@api_view(['GET'])
+def categories(request):
+    categories = Categories.objects.all()
+    categories_serializer = CategoriesModelSerializer(categories, many=True)
+    return Response(categories_serializer.data)
+
+@api_view(['GET'])
+def product_deals(request):
+    deals =  ProductDeals.objects.all()
+    deals_serializer = ProductDealsModelSerializer(deals, many = True)
+    return Response(deals_serializer.data)
