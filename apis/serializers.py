@@ -1,5 +1,7 @@
+from dataclasses import field
+from pyexpat import model
 from rest_framework import serializers 
-from .models import Categories, ProductDeals, Products, Users
+from .models import *
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 User = get_user_model()
@@ -34,14 +36,36 @@ class UsersModelSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-
-
 class CategoriesModelSerializer(serializers.ModelSerializer):
     class Meta: 
         model = Categories
         fields = '__all__'
+
 class ProductDealsModelSerializer(serializers.ModelSerializer):
     class Meta: 
         model = ProductDeals
         fields = '__all__'
+
+class ServicesModelSerializer(serializers.ModelSerializer):
+    class Meta: 
+        model = Services
+        fields = '__all__'
+
+class ComapnyInfoModelSerializer(serializers.ModelSerializer):
+    class Meta: 
+        model = CompanyInfo
+        fields = '__all__'
+
+class PopularSearchesModelSerializer(serializers.ModelSerializer):
+    class Meta: 
+        model = PopularSearches
+        fields = '__all__'
+
+
+class CartModelSerializer(serializers.ModelSerializer):
+    class Meta: 
+        model = Cart
+        fields = '__all__'
+
+
 
