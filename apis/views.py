@@ -1,3 +1,4 @@
+from turtle import title
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -8,6 +9,8 @@ import os
 from apis.models import *
 from apis.serializers import *
 from pathlib import Path
+from rest_framework import filters
+
 
 
 
@@ -88,9 +91,9 @@ def signup(request):
         return Response(user_serializer.errors, status=status.HTTP_403_FORBIDDEN)
 
 
-@api_view(['GET'])
-def get_user(request):
-    token = request.COOKIES.get('token')
+@api_view(['POST'])
+def get_user(request):  
+    token = request.data['token']
 
     if not token:
         raise APIException('Unauthenticated')
@@ -177,6 +180,7 @@ def popular_searches(request):
 
     return Response(searches_serailizer.data)
 
+
 @api_view(['GET'])
 def get_cart(request):
     token = request.COOKIES.get('token')
@@ -195,21 +199,25 @@ def get_cart(request):
     cart_serializer = CartModelSerializer(cart, many=True)
     return Response(cart_serializer.data)
 
+
 @csrf_exempt
 @api_view(['POST'])
 def add_to_cart(request, pk):
-    token = request.session.get('token')
+    # token = request.COOKIES.get('token')
 
-    if not token:
-        raise APIException('Unauthenticated')
-    try:
-        payload = jwt.decode(token, key=str(os.getenv('jwt_secret')), algorithms=['HS256'] )
+    # if not token:
+    #     raise APIException('Unauthenticated')
+    # try:
+    #     payload = jwt.decode(token, key=str(os.getenv('jwt_secret')), algorithms=['HS256'] )
 
-    except jwt.ExpiredSignatureError: 
-        raise APIException('Token expired')
+    # except jwt.ExpiredSignatureError: 
+    #     raise APIException('Token expired')
 
-    user = Users.objects.filter(id = payload["id"]).first()
-    products = ProductDeals.objects.get(id = pk)
+    username = request.data["username"]
+    product_title = request.data['product_title']
+
+    user = Users.objects.filter(username = username).first()
+    products = ProductDeals.objects.get(title = product_title)
 
     cart = Cart.objects.create(buyer = user, products = products)
     cart.save()
@@ -217,3 +225,12 @@ def add_to_cart(request, pk):
     print(cart)
 
     return Response()
+
+
+@api_view(['GET'])
+def search(request):
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+    queryset = Products.objects.all()
+    serializer_class = ProductsModelSerializer(queryset)
+    return Response (serializer_class.data)

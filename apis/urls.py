@@ -14,7 +14,7 @@ urlpatterns = [
     path('info/', views.metaInfo, name="info" ), 
     path('popular_searches/', views.popular_searches, name="searches" ), 
     path("product/<str:pk>", views.product, name='product'),
-
+    path('search/', views.search, name='search'),
 
     path("login/", views.login_user, name='login'),
     path('profile/', views.get_user, name="user"),
